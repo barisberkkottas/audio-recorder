@@ -15,7 +15,7 @@ class AudioRecorder:
         self.sampleRate = sampleRate
         self.blockDuration = blockDuration
 
-    def __record__(self):
+    def __record__(self, askForOutputFileName):
         self.recording = True
         print("Recording started, press 's' to stop recording.")
 
@@ -36,18 +36,24 @@ class AudioRecorder:
                     break
 
         print("Recording finished, saving to file...")
-        sf.write("output.wav", np.concatenate(self.buffer), 44100)
+
+        outputFileName = "output.wav"
+        if askForOutputFileName:
+            outputFileName = input("Enter output file name: ") + ".wav"
+        
+        sf.write(outputFileName, np.concatenate(self.buffer), 44100)
+
         print("File saved as output.wav.")
 
         self.buffer = []
         self.silentTime = 0
         self.recording = False
 
-    def startRecording(self):
+    def startRecording(self, askForOutputFileName=False):
         if self.recording:
             return
 
-        self.thread = threading.Thread(target=self.__record__)
+        self.thread = threading.Thread(target=self.__record__, args=(askForOutputFileName,))
         self.thread.start()
 
     def stopRecording(self):
@@ -62,7 +68,7 @@ class AudioRecorder:
 
 if __name__ == "__main__":
     recorder = AudioRecorder(silentTimeThreshold=3.0)
-    recording = recorder.startRecording()
+    recording = recorder.startRecording(True)
 
     while True:
         if msvcrt.kbhit():
@@ -70,7 +76,7 @@ if __name__ == "__main__":
             if key == b's':
                 recorder.stopRecording()
             elif key == b'r':
-                recorder.startRecording()
+                recorder.startRecording(True)
             elif key == b'q':
                 if recorder.isRecording():
                     recorder.stopRecording()
