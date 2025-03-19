@@ -5,7 +5,7 @@ import soundfile as sf
 import threading
 
 class AudioRecorder:
-    def __init__(self, volumeThreshold=0.01, silentTimeThreshold=1.0, sampleRate=44100, blockDuration=0.1):
+    def __init__(self, volumeThreshold=0.01, silentTimeThreshold=1.0, sampleRate=44100, blockDuration=0.1, askForFileOutputName=False):
         self.buffer = []
         self.silentTime = 0
         self.recording = False
@@ -14,8 +14,9 @@ class AudioRecorder:
         self.silentTimeThreshold = silentTimeThreshold
         self.sampleRate = sampleRate
         self.blockDuration = blockDuration
+        self.askForOutputFileName = askForFileOutputName
 
-    def __record__(self, askForOutputFileName):
+    def __record__(self):
         self.recording = True
         print("Recording started, press 's' to stop recording.")
 
@@ -38,7 +39,7 @@ class AudioRecorder:
         print("Recording finished, saving to file...")
 
         outputFileName = "output.wav"
-        if askForOutputFileName:
+        if self.askForOutputFileName:
             outputFileName = input("Enter output file name: ") + ".wav"
         
         sf.write(outputFileName, np.concatenate(self.buffer), 44100)
@@ -49,11 +50,11 @@ class AudioRecorder:
         self.silentTime = 0
         self.recording = False
 
-    def startRecording(self, askForOutputFileName=False):
+    def startRecording(self):
         if self.recording:
             return
 
-        self.thread = threading.Thread(target=self.__record__, args=(askForOutputFileName,))
+        self.thread = threading.Thread(target=self.__record__)
         self.thread.start()
 
     def stopRecording(self):
@@ -67,8 +68,8 @@ class AudioRecorder:
         return self.recording
 
 if __name__ == "__main__":
-    recorder = AudioRecorder(silentTimeThreshold=3.0)
-    recording = recorder.startRecording(True)
+    recorder = AudioRecorder(silentTimeThreshold=3.0, askForFileOutputName=True)
+    recording = recorder.startRecording()
 
     while True:
         if msvcrt.kbhit():
@@ -76,7 +77,7 @@ if __name__ == "__main__":
             if key == b's':
                 recorder.stopRecording()
             elif key == b'r':
-                recorder.startRecording(True)
+                recorder.startRecording()
             elif key == b'q':
                 if recorder.isRecording():
                     recorder.stopRecording()
